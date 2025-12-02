@@ -4,3 +4,4 @@ geopandas
 ipdb
 ipykernel
 scikit-learn
+plotly
