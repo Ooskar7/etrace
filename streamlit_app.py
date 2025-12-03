@@ -196,7 +196,7 @@ elif page == "Mapping":
     st.header("🗺️ NUTS-2 Regional Map Visualization")
 
     # Load your merged dataset
-    df_clean = st.session_state.get("uploaded_file")
+    df_clean = st.session_state.get(uploaded_file)
 
     if df_clean is None:
         st.warning("Please upload your dataset first on the Home page.")
