@@ -165,15 +165,18 @@ if page == "Exploration":
                 value_name="fraction"
             )
 
+            # Apply human-readable names
             climate_long["climate_zone_label"] = climate_long["climate_zone"].apply(
-                lambda x: koppen_labels[x.replace("pct_", "")] if x.replace("pct_", "") in koppen_labels else x
-        )
+                lambda x: koppen_labels[x.replace("pct_", "")]
+                if x.replace("pct_", "") in koppen_labels
+                else x
+            )
 
             fig_climate = px.area(
                 climate_long,
                 x="year",
                 y="fraction",
-                color="climate_zone",
+                color="climate_zone_label",
                 title=f"Climate Distribution Over Time in {region}"
             )
 
