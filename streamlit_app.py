@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly
 import plotly.express as px
+import pydeck as pdk
+import json
 
 # ---------------------------------------------------------
 # E-TRACE: European Tourism Regional Analysis & Climate Effects
@@ -88,7 +90,7 @@ if uploaded_file:
 # Sidebar Navigation (for future pages)
 # ---------------------------------------------------------
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to:", ["Home", "Exploration", "Models"])
+page = st.sidebar.radio("Go to:", ["Home", "Exploration", "Mapping", "Models"])
 
 if page == "Exploration":
 
@@ -189,6 +191,83 @@ if page == "Exploration":
 
             st.plotly_chart(fig_climate, use_container_width=True)
 
+elif page == "Mapping":
+
+    st.header("🗺️ NUTS-2 Regional Map Visualization")
+
+    # Load your merged dataset
+    df_clean = st.session_state.get("uploaded_df")
+
+    if df_clean is None:
+        st.warning("Please upload your dataset first on the Home page.")
+        st.stop()
+
+    # Load NUTS2 GeoJSON
+    with open("nuts2_data/nuts2_geo.geojson", "r") as f:
+        nuts2_geo = json.load(f)
+
+    # Variables available for mapping
+    map_numeric_cols = [
+        c for c in df_clean.columns
+        if df_clean[c].dtype in ["float64", "int64"]
+    ]
+
+    selected_var = st.selectbox("Variable to visualize:", map_numeric_cols)
+
+    years = sorted(df_clean["year"].unique())
+    selected_year = st.slider("Select Year", min(years), max(years), min(years))
+
+    df_year = df_clean[df_clean["year"] == selected_year]
+
+    # Attach values to GeoJSON
+    for feature in nuts2_geo["features"]:
+        geo_id = feature["properties"]["NUTS_ID"]
+        match = df_year[df_year["geo"] == geo_id]
+
+        if not match.empty:
+            feature["properties"][selected_var] = float(match[selected_var].values[0])
+        else:
+            feature["properties"][selected_var] = None
+
+    # PyDeck layer
+    choropleth_layer = pdk.Layer(
+        "GeoJsonLayer",
+        nuts2_geo,
+        opacity=0.7,
+        stroked=False,
+        filled=True,
+        extruded=True,
+        wireframe=False,
+        get_elevation=f"properties.{selected_var}",
+        elevation_scale=0.0001,
+        get_fill_color=f"""
+            [
+                properties.{selected_var} * 0.00005,
+                100,
+                200 - properties.{selected_var} * 0.00003,
+                180
+            ]
+        """,
+    )
+
+    view_state = pdk.ViewState(
+        latitude=50,
+        longitude=10,
+        zoom=3.3,
+        bearing=0,
+        pitch=35,
+    )
+
+    st.pydeck_chart(
+        pdk.Deck(
+            map_style="mapbox://styles/mapbox/light-v9",
+            initial_view_state=view_state,
+            layers=[choropleth_layer],
+            tooltip={
+                "text": f"NUTS: {{NUTS_ID}}\n{selected_var}: {{{selected_var}}}"
+            },
+        )
+    )
 
 elif page == "Models":
     st.header("🤖 Predictive Models")
