@@ -7,6 +7,31 @@ import plotly
 # Basic Streamlit Frontend Starter Template
 # ---------------------------------------------------------
 
+# Köppen climate classification labels
+koppen_labels = {
+    "Af": "Tropical rainforest",
+    "Am": "Tropical monsoon",
+    "Aw": "Tropical savanna",
+    "BWh": "Hot desert",
+    "BWk": "Cold desert",
+    "BSh": "Hot semi-arid",
+    "BSk": "Cold semi-arid",
+    "Csa": "Hot-summer Mediterranean",
+    "Csb": "Warm-summer Mediterranean",
+    "Csc": "Cold-summer Mediterranean",
+    "Cfa": "Humid subtropical",
+    "Cfb": "Oceanic",
+    "Cfc": "Subpolar oceanic",
+    "Dfa": "Hot-summer continental",
+    "Dfb": "Warm-summer continental",
+    "Dfc": "Subarctic",
+    "Dsa": "Dry-summer continental",
+    "Dsb": "Warm-summer continental",
+    "Dsc": "Cold-summer continental",
+    "ET": "Tundra",
+    "EF": "Ice cap"
+}
+
 # Page configuration
 st.set_page_config(
     page_title="E-TRACE Dashboard",
@@ -139,6 +164,10 @@ if page == "Exploration":
                 var_name="climate_zone",
                 value_name="fraction"
             )
+
+            climate_long["climate_zone_label"] = climate_long["climate_zone"].apply(
+                lambda x: koppen_labels[x.replace("pct_", "")] if x.replace("pct_", "") in koppen_labels else x
+        )
 
             fig_climate = px.area(
                 climate_long,
