@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly
+import plotly.express as px
 
 # ---------------------------------------------------------
 # E-TRACE: European Tourism Regional Analysis & Climate Effects
@@ -131,17 +132,23 @@ if page == "Exploration":
         st.header("📈 Time-Series Indicators")
 
         # Plot each available variable
-        import plotly.express as px
-
         for label, col in available_vars.items():
             if col in df_region.columns:
-                st.subheader(koppen_labels[label] if col.startswith("pct_") else label)
+                # If it is a climate variable, convert pct_Dfb → Dfb → readable label
+                if col.startswith("pct_"):
+                    code = col.replace("pct_", "")  # e.g. Dfb
+                    pretty_label = f"Climate: {koppen_labels.get(code, code)}"
+                else:
+                    pretty_label = label
+
+                st.subheader(pretty_label)
+
                 fig = px.line(
                     df_region,
                     x="year",
                     y=col,
                     markers=True,
-                    title=f"{label} over time in {region}"
+                    title=f"{pretty_label} over time in {region}"
                 )
                 fig.update_layout(height=350)
                 st.plotly_chart(fig, use_container_width=True)
