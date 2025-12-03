@@ -135,7 +135,7 @@ if page == "Exploration":
 
         for label, col in available_vars.items():
             if col in df_region.columns:
-                st.subheader(label)
+                st.subheader(koppen_labels[label] if col.startswith("pct_") else label)
                 fig = px.line(
                     df_region,
                     x="year",
