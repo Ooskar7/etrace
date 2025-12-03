@@ -78,6 +78,8 @@ if uploaded_file:
     else:
         df = pd.read_parquet(uploaded_file)
 
+    st.session_state["df_clean"] = df
+
     st.success("Dataset loaded successfully!")
     st.write("### Preview of the data:")
     st.dataframe(df.head())
@@ -196,7 +198,7 @@ elif page == "Mapping":
     st.header("🗺️ NUTS-2 Regional Map Visualization")
 
     # Load your merged dataset
-    df_clean = st.session_state.get(uploaded_file)
+    df_clean = st.session_state.get("df_clean")
 
     if df_clean is None:
         st.warning("Please upload your dataset first on the Home page.")
@@ -205,6 +207,11 @@ elif page == "Mapping":
     # Load NUTS2 GeoJSON
     with open("nuts2_data/nuts2_geo.geojson", "r") as f:
         nuts2_geo = json.load(f)
+
+    # Ensure 'geo' column exists
+    if "geo" not in df_clean.columns:
+        st.error("The dataset does not contain a 'geo' column.")
+        st.stop()
 
     # Variables available for mapping
     map_numeric_cols = [
