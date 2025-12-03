@@ -95,12 +95,11 @@ if page == "Exploration":
             "Tourism (Nights Spent)": "nights_spent",
             "GDP": "gdp",
             "Population": "pop",
-            "Employment Rate": "employment",
-            "Unemployment": "unemployment",
+            "Employment Rate": "employment_rate",
         }
 
         # Detect climate variables if present
-        climate_vars = [col for col in numeric_columns if "temp" in col.lower() or "climate" in col.lower()]
+        climate_vars = [col for col in numeric_columns if col.startswith("pct_")]
         for c in climate_vars:
             available_vars[f"Climate: {c}"] = c
 
@@ -121,6 +120,35 @@ if page == "Exploration":
                 )
                 fig.update_layout(height=350)
                 st.plotly_chart(fig, use_container_width=True)
+
+
+        # ------------------------
+        # Climate Stacked Area Chart
+        # ------------------------
+
+        st.subheader("🌍 Climate Composition Over Time")
+
+        climate_cols = [c for c in df_region.columns if c.startswith("pct_")]
+
+        if climate_cols:
+            climate_df = df_region[["year"] + climate_cols].copy()
+
+            # Melt into long format
+            climate_long = climate_df.melt(
+                id_vars="year",
+                var_name="climate_zone",
+                value_name="fraction"
+            )
+
+            fig_climate = px.area(
+                climate_long,
+                x="year",
+                y="fraction",
+                color="climate_zone",
+                title=f"Climate Distribution Over Time in {region}"
+            )
+
+            st.plotly_chart(fig_climate, use_container_width=True)
 
 
 elif page == "Models":
