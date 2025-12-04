@@ -278,7 +278,7 @@ elif page == "Mapping":
         pdk.Deck(
             map_style="mapbox://styles/mapbox/light-v9",
             initial_view_state=view_state,
-            layers=[choropleth_layer],
+            layers=[layer],
             tooltip={
                 "text": f"NUTS: {{NUTS_ID}}\n{selected_var}: {{{selected_var}}}"
             },
