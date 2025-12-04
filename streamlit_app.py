@@ -246,11 +246,31 @@ elif page == "Mapping":
     df_year["scaled_value"] = (df_year[selected_var] - vmin) / (vmax - vmin)
 
     def colormap(v):
-        # v between 0 and 1
+        if v is None or pd.isna(v):
+            return [200, 200, 200]  # grey for missing
         r = int(30 + 225 * v)
         g = int(30 + 225 * (1 - v))
         b = 160
         return [r, g, b]
+
+
+    # -------------------------------------------
+    # SAFE Normalize values
+    # -------------------------------------------
+
+    vals = df_year[selected_var].astype(float)
+
+    vmin = vals.min()
+    vmax = vals.max()
+
+    # Avoid division by zero: if no variation, fill with zero
+    if vmin == vmax:
+        df_year["scaled_value"] = 0
+    else:
+        df_year["scaled_value"] = (vals - vmin) / (vmax - vmin)
+
+    # Replace NaN with 0.5 (neutral mid-value)
+    df_year["scaled_value"] = df_year["scaled_value"].fillna(0.5)
 
     df_year["color"] = df_year["scaled_value"].apply(colormap)
 
