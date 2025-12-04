@@ -7,5 +7,4 @@ scikit-learn
 plotly
 pydeck
 streamlit
-json
 geojson
