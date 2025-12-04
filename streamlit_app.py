@@ -254,6 +254,19 @@ elif page == "Mapping":
 
     df_year["color"] = df_year["scaled_value"].apply(colormap)
 
+    # -------------------------------------------
+    # Attach COLOR to GeoJSON features
+    # -------------------------------------------
+    for feature in nuts2_geo["features"]:
+        geo_id = feature["properties"]["NUTS_ID"]
+        match = df_year[df_year["geo"] == geo_id]
+
+        if not match.empty:
+            feature["properties"]["color"] = match["color"].values[0]
+        else:
+            feature["properties"]["color"] = [180, 180, 180]   # grey fallback
+
+
 
     # PyDeck layer
     layer = pdk.Layer(
