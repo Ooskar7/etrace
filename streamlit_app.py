@@ -236,25 +236,34 @@ elif page == "Mapping":
         else:
             feature["properties"][selected_var] = None
 
+    # -------------------------------------------
+    # Compute normalized color values
+    # -------------------------------------------
+
+    vmin = df_year[selected_var].min()
+    vmax = df_year[selected_var].max()
+
+    df_year["scaled_value"] = (df_year[selected_var] - vmin) / (vmax - vmin)
+
+    def colormap(v):
+        # v between 0 and 1
+        r = int(30 + 225 * v)
+        g = int(30 + 225 * (1 - v))
+        b = 160
+        return [r, g, b]
+
+    df_year["color"] = df_year["scaled_value"].apply(colormap)
+
+
     # PyDeck layer
-    choropleth_layer = pdk.Layer(
+    layer = pdk.Layer(
         "GeoJsonLayer",
         nuts2_geo,
-        opacity=0.7,
-        stroked=False,
+        opacity=0.75,
+        stroked=True,
         filled=True,
-        extruded=True,
-        wireframe=False,
-        get_elevation=f"properties.{selected_var}",
-        elevation_scale=0.0001,
-        get_fill_color=f"""
-            [
-                properties.{selected_var} * 0.00005,
-                100,
-                200 - properties.{selected_var} * 0.00003,
-                180
-            ]
-        """,
+        get_fill_color="color",
+        pickable=True,
     )
 
     view_state = pdk.ViewState(
