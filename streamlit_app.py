@@ -4,6 +4,7 @@ import plotly
 import plotly.express as px
 import pydeck as pdk
 import json
+import geojson
 
 # ---------------------------------------------------------
 # E-TRACE: European Tourism Regional Analysis & Climate Effects
@@ -206,7 +207,7 @@ elif page == "Mapping":
 
     # Load NUTS2 GeoJSON
     with open("nuts2_data/nuts2_geo.geojson", "r") as f:
-        nuts2_geo = json.load(f)
+        nuts2_geo = geojson.load(f)
 
     # Ensure 'geo' column exists
     if "geo" not in df_clean.columns:
@@ -220,11 +221,19 @@ elif page == "Mapping":
     ]
 
     selected_var = st.selectbox("Variable to visualize:", map_numeric_cols)
+    st.write(f"### Visualizing: **{selected_var}**")
 
     years = sorted(df_clean["year"].unique())
     selected_year = st.slider("Select Year", min(years), max(years), min(years))
 
     df_year = df_clean[df_clean["year"] == selected_year]
+
+
+    all_geo2= []
+    for each in nuts2_geo["features"]:
+        if each.properties["LEVL_CODE"] == 2:
+            all_geo2.append(each)
+    nuts2_geo["features"] = all_geo2
 
     # Attach values to GeoJSON
     for feature in nuts2_geo["features"]:
@@ -286,7 +295,8 @@ elif page == "Mapping":
         else:
             feature["properties"]["color"] = [180, 180, 180]   # grey fallback
 
-
+    st.write(df_year)
+    st.write(df_year.shape)
 
     # PyDeck layer
     layer = pdk.Layer(
@@ -297,6 +307,12 @@ elif page == "Mapping":
         filled=True,
         get_fill_color="color",
         pickable=True,
+    )
+
+    # PyDeck layer
+    data_layer = pdk.Layer(
+        "DataLayer",
+        data=df_year,
     )
 
     view_state = pdk.ViewState(
@@ -311,7 +327,7 @@ elif page == "Mapping":
         pdk.Deck(
             map_style="mapbox://styles/mapbox/light-v9",
             initial_view_state=view_state,
-            layers=[layer],
+            layers=[layer, data_layer],
             tooltip={
                 "text": f"NUTS: {{NUTS_ID}}\n{selected_var}: {{{selected_var}}}"
             },
